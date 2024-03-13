@@ -13,12 +13,9 @@ There is no requirement to maintain integrity of any file content beyond nBytes.
 The return value is negative on failure or a disk number on success. */
 
 int openDisk(char *filename, int nBytes) {
-    if(nBytes == 0) {
-        return TOTAL_DISKS;
-    }
-    if(nBytes < BLOCKSIZE) {
-        return -1;
-    }
+    if(nBytes == 0) { return TOTAL_DISKS; }
+    if(nBytes < BLOCKSIZE) { return -1; }
+    
     FILE *diskFile = fopen(filename, "wr");
     int blockOffset = nBytes % BLOCKSIZE;
     if(blockOffset != 0) {
