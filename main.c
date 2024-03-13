@@ -8,6 +8,7 @@
 #define TEST_BLOCKS {25,39,8,9,15,21,25,33,35,42}
 
 int TOTAL_DISKS = 0;
+FILE* disksFPs[NUM_TEST_DISKS] = {0};
 
 /* This functions opens a regular UNIX file and designates the first nBytes of it as space for the emulated disk. 
 If nBytes is not exactly a multiple of BLOCKSIZE then the disk size will be the closest multiple
@@ -18,15 +19,17 @@ There is no requirement to maintain integrity of any file content beyond nBytes.
 The return value is negative on failure or a disk number on success. */
 
 int openDisk(char *filename, int nBytes) {
-    if(nBytes == 0) { return TOTAL_DISKS; }
+    if(nBytes == 0) { return 0; }
     if(nBytes < BLOCKSIZE) { return -1; }
     
-    FILE *diskFile = fopen(filename, "wr");
+    FILE *diskFile = fopen(filename, "rb+");
     int blockOffset = nBytes % BLOCKSIZE;
     if(blockOffset != 0) {
         nBytes = nBytes/BLOCKSIZE; //this is incorrect arithmetic i think...
     }
     if(nBytes > BLOCKSIZE && diskFile != NULL) {
+        disksFPs[TOTAL_DISKS] = diskFile;
+        TOTAL_DISKS++;
         return TOTAL_DISKS; //eventually replaced with disk ID in the superblock given by diskFile
     }
 }
@@ -36,7 +39,17 @@ int closeDisk(int disk) {
 }
 
 int readBlock(int disk, int bNum, void* block) {
-    
+    FILE* readDisk = disksFPs[disk];
+    if (fseek(readDisk, bNum*BLOCKSIZE, SEEK_SET) != 0) {
+        printf("seek error of some form\n");
+        return -1;
+    }
+    int checkSize = fread(block, sizeof(char), BLOCKSIZE, readDisk);
+    if(checkSize < BLOCKSIZE) {
+        printf("read error of some form\n");
+        return -1;
+    }
+    return 0;
 }
 
 int writeBlock(int disk, int bNum, void* block) {
