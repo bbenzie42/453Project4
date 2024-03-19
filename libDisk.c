@@ -24,19 +24,19 @@ int openDisk(char *filename, int nBytes) {
    FILE *diskFile = NULL;
    if(nBytes == 0) {
       diskFile = fopen(filename, "rb+");
-      if(diskFile == NULL) return -1;
+      if(diskFile == NULL) return E_OPEN_DISK;
    }
    else {
-      if(nBytes < BLOCKSIZE) { return -1; }
+      if(nBytes < BLOCKSIZE) { return E_READ_BLOCK; }
       diskFile = fopen(filename, "wb+");
-      if(diskFile == NULL) return -1;
+      if(diskFile == NULL) return E_OPEN_DISK;
 
       int blockOffset = nBytes % BLOCKSIZE;
       if(blockOffset != 0) {
          nBytes -= blockOffset;
       }
 
-      // Initalize the blocks with 0 value
+      // Initalize the blocks with '0' value
       char* buffer = (char*)calloc(nBytes, 1);
       fwrite(buffer, 1, nBytes, diskFile);
       free(buffer);
@@ -46,7 +46,6 @@ int openDisk(char *filename, int nBytes) {
    disksFPs[TOTAL_DISKS] = diskFile;
    return TOTAL_DISKS++;
 }
-
 int closeDisk(int disk) {
    // Check if the disk number is valid
    if(disk < 0 || disk >= TOTAL_DISKS) {
