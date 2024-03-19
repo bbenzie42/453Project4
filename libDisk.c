@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "TinyFS_errno.h"
 
 #define NUM_TEST_DISKS 2
 #define BLOCKSIZE 256
@@ -20,60 +21,87 @@ There is no requirement to maintain integrity of any file content beyond nBytes.
 The return value is negative on failure or a disk number on success. */
 
 int openDisk(char *filename, int nBytes) {
-    if(nBytes == 0) { 
-        FILE *diskFile = fopen(filename, "rb+");
-        if(diskFile != NULL) {
-            disksFPs[TOTAL_DISKS] = diskFile;
-            TOTAL_DISKS++;
-            return TOTAL_DISKS;
-        }
-        return -1; 
-    }
+   FILE *diskFile = NULL;
+   if(nBytes == 0) {
+      diskFile = fopen(filename, "rb+");
+      if(diskFile == NULL) return -1;
+   }
+   else {
+      if(nBytes < BLOCKSIZE) { return -1; }
+      diskFile = fopen(filename, "wb+");
+      if(diskFile == NULL) return -1;
 
-    if(nBytes < BLOCKSIZE) { return -1; }
-    FILE *diskFile = fopen(filename, "rb+");
-    int blockOffset = nBytes % BLOCKSIZE;
-    if(blockOffset != 0) {
-        nBytes = nBytes/BLOCKSIZE; //this is incorrect arithmetic i think...
-    }
-    if(nBytes > BLOCKSIZE && diskFile != NULL) {
-        disksFPs[TOTAL_DISKS] = diskFile;
-        TOTAL_DISKS++;
-        return TOTAL_DISKS; //eventually replaced with disk ID in the superblock given by diskFile
-    }
+      int blockOffset = nBytes % BLOCKSIZE;
+      if(blockOffset != 0) {
+         nBytes -= blockOffset;
+      }
+
+      // Initalize the blocks with 0 value
+      char* buffer = (char*)calloc(nBytes, 1);
+      fwrite(buffer, 1, nBytes, diskFile);
+      free(buffer);
+   }
+
+   // Store file pointer and increase disk count
+   disksFPs[TOTAL_DISKS] = diskFile;
+   return TOTAL_DISKS++;
 }
 
 int closeDisk(int disk) {
+   // Check if the disk number is valid
+   if(disk < 0 || disk >= TOTAL_DISKS) {
+      return -1;
+   }
 
+   // Check if a disk file is open for the given disk number
+   FILE *diskFile = disksFPs[disk];
+   if(diskFile == NULL) {
+      return -1;
+   }
+
+   // Close the disk file
+   fclose(diskFile);
+
+   // Remove the disk file pointer from the array
+   disksFPs[disk] = NULL;
+
+   return 0; // Return success
 }
 
 int readBlock(int disk, int bNum, void* block) {
-    FILE* readDisk = disksFPs[disk];
-    if (fseek(readDisk, bNum*BLOCKSIZE, SEEK_SET) != 0) {
-        printf("seek error of some form, RB 1\n");
-        return -1;
-    }
-    int checkSize = fread(block, sizeof(char), BLOCKSIZE, readDisk);
-    if(checkSize < BLOCKSIZE) {
-        printf("read error of some form,  RB 2\n");
-        return -1;
-    }
-    return 0;
+   // Check if the disk number is valid and disk is open
+   if(disk < 0 || disk >= TOTAL_DISKS || disksFPs[disk] == NULL) {
+      return E_OPEN_DISK; // Disk not available
+   }
+
+   FILE* readDisk = disksFPs[disk];
+   if (fseek(readDisk, bNum*BLOCKSIZE, SEEK_SET) != 0) {
+      return E_READ_BLOCK; // Seek error
+   }
+   int checkSize = fread(block, sizeof(char), BLOCKSIZE, readDisk);
+   if(checkSize < BLOCKSIZE) {
+      return E_READ_BLOCK; // Read error
+   }
+   return E_SUCCESS; // Success
 }
 
+#include "TinyFS_errno.h"
+
 int writeBlock(int disk, int bNum, void* block) {
-    FILE* writeDisk = disksFPs[disk];
-    int checkSeek = fseek(writeDisk, bNum*BLOCKSIZE, SEEK_SET);
-    if (checkSeek != 0) {
-        printf("seek error of some form, WB 1\n");
-        return -1;
-    }
-    int checkSize = fwrite(block, sizeof(char), BLOCKSIZE, writeDisk);
-    if(checkSize != BLOCKSIZE) {
-        printf("read error of some form, WB 2\n");
-        return -1;
-    }
-    return 0;
+   // Check if the disk number is valid and disk is open
+   if(disk < 0 || disk >= TOTAL_DISKS || disksFPs[disk] == NULL) {
+      return E_OPEN_DISK; // Disk not available
+   }
+
+   FILE* writeDisk = disksFPs[disk];
+   if (fseek(writeDisk, bNum*BLOCKSIZE, SEEK_SET) != 0) {
+      return E_WRITE_BLOCK; // Seek error
+   }
+   size_t writeSize = fwrite(block, sizeof(char), BLOCKSIZE, writeDisk);
+   if(writeSize < BLOCKSIZE) {
+      return E_WRITE_BLOCK; // Write error
+   }
+   return E_SUCCESS; // Success
 }
 
 int main()
@@ -126,9 +154,8 @@ int main()
                     }
                 }
             }
-            printf("] Previous writes were varified. Now, delete the .dsk files if you want to run this test again.\n");
+            printf("] Previous writes were verified. Now, delete the .dsk files if you want to run this test again.\n");
        } 
     }
-    printf("Hello world!\n");
     return 0;
 }
