@@ -21,7 +21,7 @@ The return value is negative on failure or a disk number on success. */
 
 int openDisk(char *filename, int nBytes) {
     if(nBytes == 0) { 
-        FILE *diskFile = fopen(filename, "wb");
+        FILE *diskFile = fopen(filename, "rb");
         if(diskFile != NULL) {
             disksFPs[TOTAL_DISKS] = diskFile;
             TOTAL_DISKS++;
@@ -69,6 +69,7 @@ int writeBlock(int disk, int bNum, void* block) {
     FILE* writeDisk = disksFPs[disk];
     int checkSeek = fseek(writeDisk, bNum*BLOCKSIZE, SEEK_SET);
     if (checkSeek != 0) {
+        perror("fseek");
         printf("seek error of some form, WB 1\n");
         return -1;
     }
