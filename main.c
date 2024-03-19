@@ -21,7 +21,7 @@ The return value is negative on failure or a disk number on success. */
 
 int openDisk(char *filename, int nBytes) {
     if(nBytes == 0) { 
-        FILE *diskFile = fopen(filename, "rb+");
+        FILE *diskFile = fopen(filename, "wb");
         if(diskFile != NULL) {
             disksFPs[TOTAL_DISKS] = diskFile;
             TOTAL_DISKS++;
@@ -31,7 +31,9 @@ int openDisk(char *filename, int nBytes) {
     }
 
     if(nBytes < BLOCKSIZE) { return -1; }
-    FILE *diskFile = fopen(filename, "rb+");
+    FILE *diskFile = fopen(filename, "wb");
+    if (!diskFile)
+        perror("fopen");
     int blockOffset = nBytes % BLOCKSIZE;
     if(blockOffset != 0) {
         nBytes = nBytes/BLOCKSIZE; //this is incorrect arithmetic i think...
@@ -50,7 +52,9 @@ int closeDisk(int disk) {
 int readBlock(int disk, int bNum, void* block) {
     FILE* readDisk = disksFPs[disk];
     if (fseek(readDisk, bNum*BLOCKSIZE, SEEK_SET) != 0) {
+        perror("fseek");
         printf("seek error of some form, RB 1\n");
+        
         return -1;
     }
     int checkSize = fread(block, sizeof(char), BLOCKSIZE, readDisk);
