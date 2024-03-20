@@ -13,13 +13,19 @@
 #define NUM_TEST_BLOCKS 10
 #define TEST_BLOCKS {25,39,8,9,15,21,25,33,35,42}
 
-extern int TOTAL_DISKS;
-extern FILE* disksFPs[NUM_TEST_DISKS];
-
+#define TOTAL_DISKS 3
+extern FILE* disksFPs[TOTAL_DISKS];
 int openDisk(char *filename, int nBytes);
-int closeDisk(int disk); /* self explanatory */
+int closeDisk(int disk);
 int readBlock(int disk, int bNum, void *block);
 int writeBlock(int disk, int bNum, void *block);
+
+int find_file(const char* name);
+int create_file(const char* name);
+int* allocate_blocks(int num_blocks);
+void remove_blocks(int* blocks_start);
+void freeBlock(int current_block);
+
 #endif //INC_453PROJECT4_LIBDISK_H
 
 

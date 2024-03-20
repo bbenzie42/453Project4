@@ -320,24 +320,28 @@ int tfs_seek(fileDescriptor FD, int offset) {
 
 
 
-int find_file(char* name) {
+int find_file(const char* name) {
    // Traverse some data structure that stores file name to inode mappings
    // Return the inode if found, -1 if not found
    // Placeholder return
    return -1;
-}int create_file(char* name) {
+}
+int create_file(const char* name) {
    // Allocate space for the new file
    // Create an entry in your file to inode mapping
    // Return the inode of the new file
    // Placeholder return
    return -1;
-}int* allocate_blocks(int num_blocks) {
+}
+int* allocate_blocks(int num_blocks) {
    // Implement block allocation logic here
    // Placeholder return
    return NULL;
-}void remove_blocks(int* blocks_start) {
+}
+void remove_blocks(int* blocks_start) {
    // Implement block deallocation logic here
-}void freeBlock(int block_number) {
+}
+void freeBlock(int block_number) {
    // Mark the block as free in your block allocation table
 }
 

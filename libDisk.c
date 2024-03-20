@@ -2,10 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include "TinyFS_errno.h"
-#include "libDisk.h"
+
+#define NUM_TEST_DISKS 2
+#define BLOCKSIZE 256
+#define NUM_BLOCKS 50 /* total number of blocks on each disk */
+#define NUM_TEST_BLOCKS 10
+#define TEST_BLOCKS {25,39,8,9,15,21,25,33,35,42}
 
 int TOTAL_DISKS = 0;
-FILE* disksFPs = {0};
+FILE* disksFPs[NUM_TEST_DISKS] = {0};
 
 /* This functions opens a regular UNIX file and designates the first nBytes of it as space for the emulated disk. 
 If nBytes is not exactly a multiple of BLOCKSIZE then the disk size will be the closest multiple
@@ -96,6 +101,7 @@ int writeBlock(int disk, int bNum, void* block) {
    return E_SUCCESS; // Success
 }
 
+
 int main()
 {
     int index, index2, index3 = 0;
@@ -111,7 +117,7 @@ int main()
         disks[index] = openDisk(diskName, 0);
         if (disks[index] < 0) {
             printf("] Open failed with (%i). Disk probably does not exist.\n",disks[index]);
-	        disks[index] = openDisk(diskName, BLOCKSIZE * NUM_FtotBLOCKS); /* create the disk */
+	        disks[index] = openDisk(diskName, BLOCKSIZE * NUM_BLOCKS); /* create the disk */
 	        if (disks[index] < 0) {
                 printf("] openDisk() failed to create a disk. This should never happen. Exiting. \n");
 		        exit(0);
@@ -151,3 +157,4 @@ int main()
     }
     return 0;
 }
+
