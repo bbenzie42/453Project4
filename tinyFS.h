@@ -7,7 +7,7 @@
 
 #define MAX_OPEN_FILES 128
 #define DEFAULT_DISK_SIZE 10240
-#define DEFAULT_DISK_NAME “tinyFSDisk”
+#define DEFAULT_DISK_NAME "tinyFSDisk"
 typedef int fileDescriptor;
 
 #define BLOCKSIZE 256
@@ -43,5 +43,12 @@ typedef struct free_block {
    int next_free_block; // block# of next free block
    char reserved[BLOCKSIZE - sizeof(int) - 2]; // rest space as reserved
 } free_block_t;
+
+int find_file(char* name);
+int create_file(char* name);
+int* allocate_blocks(int num_blocks);
+void remove_blocks(int* blocks_start);
+void freeBlock(int block_number);
+
 
 #endif //INC_453PROJECT4_TINYFS_H

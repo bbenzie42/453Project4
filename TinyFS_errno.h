@@ -22,5 +22,6 @@
 #define E_FILE_TOO_BIG -17
 #define E_DELETE_FILE -18
 #define E_SEEK_FILE -19
+#define E_FREE_BLOCK -20
 
 #endif //INC_453PROJECT4_TINYFS_ERRNO_H
